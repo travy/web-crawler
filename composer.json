@@ -1,0 +1,17 @@
+{
+    "name": "travy/web-crawler",
+    "description": "A web crawler which will traverse links found in all parent and child web pages running and performs tasks on each page.",
+    "type": "library",
+    "require-dev": {
+        "phpunit/phpunit": "5.7"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Travis Anthony Torres",
+            "email": "travis@travistorres.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
