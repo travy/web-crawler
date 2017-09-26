@@ -1,6 +1,16 @@
 <?php
 namespace WebCrawler;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\ServerException;
+
+use PHPHtmlParser\Dom;
+use PHPHtmlParser\Exceptions\CurlException;
+
+use WebCrawler\Structures\SortedUrlList;
+
 use InvalidArgumentException;
 
 /**
@@ -19,18 +29,44 @@ use InvalidArgumentException;
 class Crawler
 {
     private $root;
+    private $urlQueue;
     
     protected $_defaultConfigs = [
-        'maxCrawls' => -1,
+        'maxCrawls' => 200,
     ];
     
-    public function __construct($rootUrl)
+    /**
+     * Constructs a new Crawler which will explore the web starting from a
+     * given URL.
+     *
+     * Options:
+     * 1. maxCrawls - Specifies the maximum number of web pages to crawl
+     *    through
+     *
+     * @param string $rootUrl
+     * @param array $options
+     *
+     * @throws InvalidArgumentException
+     */
+    public function __construct($rootUrl, array $options = [])
     {
+        $configs = $this->getConfigs($options);
+        
         if (!$this->setRoot($rootUrl)) {
             throw new InvalidArgumentException(sprintf("The supplied URL value {%s} is invalid.", $rootUrl));
         }
+        
+        $this->urlQueue = new SortedUrlList($configs['maxCrawls']);
+        $this->urlQueue->add($rootUrl);
     }
     
+    /**
+     * Sets the root URL address.
+     *
+     * @param string $rootUrl
+     *
+     * @return Boolean
+     */
     public function setRoot($rootUrl)
     {
         $safeUrl = self::isValidUrl($rootUrl);
@@ -42,23 +78,119 @@ class Crawler
         return $safeUrl;
     }
     
+    /**
+     * Retrieves the URL for the first web page.
+     *
+     * @return string
+     */
     public function getRoot()
     {
         return $this->root;
     }
     
-    public function crawl(array $options = [])
+    /**
+     * Will crawl through the web executing analyzers on each page that is
+     * touched.
+     *
+     * @return void
+     */
+    public function crawl()
     {
-        $configs = $this->getConfigs($options);
+        foreach ($this->urlQueue as $k => $url) {
+            echo "\n[" . $k . "]  " . $url;
+            ob_flush();
+            flush();
+            
+            $parser = $this->getParser($url);
+            if ($parser !== false) {
+                $links = $this->getLinksOnPage($url, $parser);
+                $this->urlQueue->addFromArray($links);
+            }
+        }
         
-        echo file_get_contents($this->root);
+        echo print_r($this->urlQueue, true);
     }
     
+    /**
+     * Retrieves a parser for the content listed on the URL page.
+     *
+     * @param string $url
+     *
+     * @return boolean|Dom false if the content from the page could not
+     * accessed or parsed, otherwise a parselable dom object.
+     */
+    public function getParser($url)
+    {
+        try {
+            $client = new Client();
+            $response = $client->request('GET', $url, ['verify' => false]);
+            $html = $response->getBody();
+
+            $dom = new Dom();
+            return $dom->load($html);
+        } catch (CurlException $ex) {
+            // TODO - decide what to do on HTTP error conditions, ignoring seems useless
+        } catch (ClientException $clientEx) {
+            
+        } catch (ConnectException $connectEx) {
+            
+        } catch (ServerException $serverEx) {
+            
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Parses out all links found within a given web page.
+     *
+     * @param string $url
+     *
+     * @return array List of all URL addresses
+     */
+    public function getLinksOnPage($url, Dom $parser = null)
+    {
+        $results = [];
+        
+        //  construct a new parser if none has been provided
+        if (is_null($parser)) {
+            $parser = $this->getParser($url);
+            if ($parser === false) {
+                return false;
+            }
+        }
+        
+        //  obtain all links specified within HTML anchor tags
+        $anchors = $parser->find('a');
+        foreach($anchors as $anchor) {
+            $href = $anchor->getAttribute('href');
+            if (!is_null($href) && self::isValidUrl($href)) {
+                array_push($results, $href);
+            }
+        }
+
+        return $results;
+    }
+    
+    /**
+     * Retrieves the user customized configurations.
+     *
+     * @param array $options
+     *
+     * @return array
+     */
     private function getConfigs(array $options = [])
     {
         return array_merge($this->_defaultConfigs, $options);
     }
     
+    /**
+     * Determines if the URL specified is valid or not.
+     *
+     * @param string $url
+     *
+     * @return Boolean
+     */
     private static function isValidUrl($url)
     {
         if (strpos($url, '://') === false) {

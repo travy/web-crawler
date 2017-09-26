@@ -15,7 +15,7 @@ class CrawlerTest extends TestCase
     {
         parent::setUp();
         
-        $this->presetDomain = 'http://google.com';
+        $this->presetDomain = 'http://www.boxofficemojo.com/?ref_=amzn_nav_ftr';//'http://www.funimation.com/';
         $this->crawler = new Crawler($this->presetDomain);
     }
     
@@ -103,6 +103,7 @@ class CrawlerTest extends TestCase
     
     public function testCrawl()
     {
+        $this->crawler->crawl();
         $this->markTestIncomplete('Not yet implemented');
     }
 }
