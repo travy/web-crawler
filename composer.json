@@ -6,6 +6,16 @@
         "phpunit/phpunit": "5.7"
     },
     "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "WebCrawler\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WebCrawler\\Tests\\": "tests"
+        }
+    },
     "authors": [
         {
             "name": "Travis Anthony Torres",
@@ -13,5 +23,8 @@
         }
     ],
     "minimum-stability": "stable",
-    "require": {}
+    "require": {
+        "paquettg/php-html-parser": "^1.7",
+        "guzzlehttp/guzzle": "^6.3"
+    }
 }
