@@ -5,9 +5,11 @@ use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 use WebCrawler\Crawler;
+use WebCrawler\Structures\WebAnalyzers\AnalyzerRegistry;
 
 class CrawlerTest extends TestCase
 {
+    public $analyzerRegistry;
     public $presetDomain;
     public $crawler;
     
@@ -15,8 +17,9 @@ class CrawlerTest extends TestCase
     {
         parent::setUp();
         
+        $this->analyzerRegistry = new AnalyzerRegistry();
         $this->presetDomain = 'http://www.boxofficemojo.com/?ref_=amzn_nav_ftr';//'http://www.funimation.com/';
-        $this->crawler = new Crawler($this->presetDomain);
+        $this->crawler = new Crawler($this->presetDomain, $this->analyzerRegistry);
     }
     
     public function tearDown()
@@ -24,6 +27,8 @@ class CrawlerTest extends TestCase
         parent::tearDown();
         
         $this->crawler = null;
+        $this->presetDomain = null;
+        $this->analyzerRegistry = null;
     }
     
     public function validUrlsDataProvider()

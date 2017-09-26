@@ -10,6 +10,7 @@ use PHPHtmlParser\Dom;
 use PHPHtmlParser\Exceptions\CurlException;
 
 use WebCrawler\Structures\SortedUrlList;
+use WebCrawler\Structures\WebAnalyzers\AnalyzerRegistry;
 
 use InvalidArgumentException;
 
@@ -30,7 +31,9 @@ class Crawler
 {
     private $root;
     private $urlQueue;
+    private $registry;
     
+    //  TODO- create a ConfigTrait that will automatically map custom and default configurations
     protected $_defaultConfigs = [
         'maxCrawls' => 200,
     ];
@@ -48,7 +51,7 @@ class Crawler
      *
      * @throws InvalidArgumentException
      */
-    public function __construct($rootUrl, array $options = [])
+    public function __construct($rootUrl, AnalyzerRegistry $registry = null, array $options = [])
     {
         $configs = $this->getConfigs($options);
         
@@ -56,8 +59,14 @@ class Crawler
             throw new InvalidArgumentException(sprintf("The supplied URL value {%s} is invalid.", $rootUrl));
         }
         
+        //  create a queue and add the rootUrl
         $this->urlQueue = new SortedUrlList($configs['maxCrawls']);
         $this->urlQueue->add($rootUrl);
+        
+        //  create the registry for all page analyzers
+        $this->registry = is_null($registry) ?
+                new AnalyzerRegistry() :
+                $registry;
     }
     
     /**
