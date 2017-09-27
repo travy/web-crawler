@@ -66,7 +66,7 @@ class AnalyzerRegistry implements Container, Iterator
         $wasAdded = true;
         
         //  adds the analyzer if it is valid
-        if (!isset($name)) {
+        if (is_null($name)) {
             array_push($this->analyzers, $analyzer);
         } else if (!array_key_exists($name, $this->analyzers) || $allowOverwrites) {
             $this->analyzers[$name] = $analyzer;
