@@ -21,7 +21,21 @@ abstract class AbstractAnalyzer
     /**
      * Operation called to analyze the current DOM page.
      *
-     * @return undecided
+     * @return void
      */
     public abstract function analyze($url, $html, Dom $parser);
+    
+    /**
+     * Allow the Analyzer to be invokable.
+     *
+     * @param string $url
+     * @param string $html
+     * @param Dom $parser
+     *
+     * @return void
+     */
+    public function __invoke($url, $html, Dom $parser)
+    {
+        $this->analyze($url, $html, $parser);
+    }
 }
