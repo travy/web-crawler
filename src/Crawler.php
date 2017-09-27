@@ -105,13 +105,13 @@ class Crawler
      */
     public function crawl()
     {
-        foreach ($this->urlQueue as $k => $url) {
-            echo "\n[" . $k . "]  " . $url;
-            ob_flush();
-            flush();
-            
+        foreach ($this->urlQueue as $url) {
             $parser = $this->getParser($url);
             if ($parser !== false) {
+                //  execute all urls on the given page
+                $this->registry->execute($url, $parser);
+                
+                //  retrieve a list of all links on the page and add them to the queue
                 $links = $this->getLinksOnPage($url, $parser);
                 $this->urlQueue->addFromArray($links);
             }

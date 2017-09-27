@@ -1,6 +1,8 @@
 <?php
 namespace WebCrawler\Structures\WebAnalyzers;
 
+use PHPHtmlParser\Dom;
+
 use WebCrawler\Structures\Interfaces\Container;
 
 use InvalidArgumentException;
@@ -19,13 +21,28 @@ use Iterator;
 
 class AnalyzerRegistry implements Container, Iterator
 {
-    private $index;
     private $analyzers;
+    private $index;
     
     public function __construct()
     {
         $this->analyzers = [];
         $this->index = 0;
+    }
+    
+    /**
+     * Executes each analyzer in the registry on a specified URL.
+     *
+     * @param string $url
+     * @param Dom $parser
+     *
+     * @return void
+     */
+    public function execute($url, Dom $parser)
+    {
+        foreach ($this->analyzers as $analyzer) {
+            call_user_func($analyzer, $url, $parser);
+        }
     }
     
     /**
@@ -157,6 +174,6 @@ class AnalyzerRegistry implements Container, Iterator
 
     public function valid()
     {
-        return $this->index < $this->count() || !$this->isEmpty();
+        return $this->index < $this->count() && !$this->isEmpty();
     }
 }
